@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fantasy NHL Liga</title>
+<style>
+:root{--ice:#0a1628;--ice2:#0d1f38;--ice3:#112548;--accent:#00b4e6;--accent2:#0088cc;--gold:#f5c842;--silver:#b0bec5;--bronze:#cd7f32;--red:#e53935;--green:#43a047;--text:#e8f0fe;--text2:#8eafd4;--border:rgba(0,180,230,0.15);--card:rgba(255,255,255,0.04);--card-hover:rgba(255,255,255,0.07);--radius:12px;--radius-sm:8px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--ice);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;}
+.ticker{background:var(--ice3);border-bottom:1px solid var(--border);padding:6px 0;overflow:hidden;white-space:nowrap;font-size:12px;color:var(--text2);}
+.ticker-inner{display:inline-block;animation:ticker 40s linear infinite;}
+@keyframes ticker{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+header{background:var(--ice2);border-bottom:1px solid var(--border);padding:0 20px;position:sticky;top:0;z-index:100;}
+.header-inner{display:flex;align-items:center;gap:12px;max-width:1100px;margin:0 auto;height:60px;}
+.logo{font-size:18px;font-weight:700;color:var(--accent);white-space:nowrap;}
+.logo span{color:var(--gold);}
+nav{display:flex;gap:4px;flex:1;overflow-x:auto;}
+nav button{background:none;border:none;color:var(--text2);padding:7px 12px;border-radius:8px;cursor:pointer;font-size:13px;white-space:nowrap;transition:all .2s;}
+nav button:hover{color:var(--text);background:var(--card-hover);}
+nav button.active{color:var(--accent);background:rgba(0,180,230,0.1);}
+.user-badge{background:var(--ice3);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--text2);transition:all .2s;}
+.user-badge:hover{border-color:var(--accent);color:var(--text);}
+.user-badge.logged{color:var(--accent);}
+main{max-width:1100px;margin:0 auto;padding:24px 20px;}
+.view{display:none;}.view.active{display:block;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;}
+.card-header{font-size:17px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+.card-icon{width:30px;height:30px;background:rgba(0,180,230,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;}
+.grid-4{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;}
+.stat-chip{background:var(--ice3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;text-align:center;}
+.stat-chip .val{font-size:24px;font-weight:700;color:var(--accent);}
+.stat-chip .lbl{font-size:12px;color:var(--text2);margin-top:2px;}
+/* MONTH TABS */
+.month-tab{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--ice3);color:var(--text2);font-size:13px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.month-tab:hover{border-color:var(--accent);color:var(--text);}
+.month-tab.active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700;}
+.archive-badge{display:inline-block;font-size:10px;background:rgba(245,200,66,0.15);color:var(--gold);border-radius:4px;padding:1px 6px;margin-left:4px;}
+/* LEADERBOARD */
+.lb-row{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:var(--radius-sm);background:var(--card);border:1px solid var(--border);margin-bottom:8px;transition:all .2s;}
+.lb-row:hover{background:var(--card-hover);}
+.lb-row.me{border-color:rgba(0,180,230,0.5);background:rgba(0,180,230,0.06);}
+.lb-row.winner{border-color:rgba(245,200,66,0.4);background:rgba(245,200,66,0.05);}
+.rank{font-size:20px;font-weight:800;min-width:36px;text-align:center;}
+.r1{color:var(--gold);}.r2{color:var(--silver);}.r3{color:var(--bronze);}.rn{color:var(--text2);font-size:15px;}
+.lb-avatar{width:38px;height:38px;border-radius:50%;background:var(--ice3);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;border:2px solid var(--border);flex-shrink:0;}
+.lb-info{flex:1;}
+.lb-name{font-weight:600;font-size:15px;}
+.lb-chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;}
+.chip{font-size:11px;background:var(--ice3);border:1px solid var(--border);border-radius:4px;padding:2px 7px;color:var(--text2);}
+.chip.fwd{border-color:rgba(0,180,230,0.3);color:var(--accent);}
+.chip.def{border-color:rgba(245,200,66,0.3);color:var(--gold);}
+.chip.goa{border-color:rgba(67,160,71,0.3);color:var(--green);}
+.lb-right{text-align:right;}
+.lb-pts{font-size:22px;font-weight:800;color:var(--accent);}
+.lb-czk{font-size:12px;color:var(--gold);font-weight:700;}
+.lb-lbl{font-size:11px;color:var(--text2);}
+/* PLAYERS */
+.player-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;transition:all .2s;}
+.player-card:hover{background:var(--card-hover);border-color:rgba(0,180,230,0.3);}
+.p-name{font-weight:700;font-size:15px;}
+.p-team{font-size:12px;color:var(--text2);margin:2px 0 8px;}
+.p-pos{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;margin-bottom:8px;}
+.pos-F{background:rgba(0,180,230,0.15);color:var(--accent);}
+.pos-D{background:rgba(245,200,66,0.15);color:var(--gold);}
+.pos-G{background:rgba(67,160,71,0.15);color:var(--green);}
+.p-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
+.p-stat{text-align:center;background:var(--ice3);border-radius:5px;padding:5px 3px;}
+.p-stat .sv{font-size:16px;font-weight:700;}
+.p-stat .sl{font-size:10px;color:var(--text2);}
+.pts-stat .sv{color:var(--accent);}
+/* FORMS */
+.form-group{margin-bottom:14px;}
+label{display:block;font-size:13px;color:var(--text2);margin-bottom:5px;}
+input[type=text],input[type=password]{width:100%;background:var(--ice3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:10px 14px;font-size:14px;outline:none;transition:border-color .2s;}
+input:focus{border-color:var(--accent);}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:var(--radius-sm);border:none;cursor:pointer;font-size:14px;font-weight:600;transition:all .2s;}
+.btn-primary{background:var(--accent);color:#000;}.btn-primary:hover{background:var(--accent2);}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text);}.btn-outline:hover{background:var(--card-hover);border-color:var(--accent);color:var(--accent);}
+.btn-sm{padding:6px 12px;font-size:12px;}
+.btn-full{width:100%;justify-content:center;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;}
+.badge-blue{background:rgba(0,180,230,0.15);color:var(--accent);}
+.badge-gold{background:rgba(245,200,66,0.15);color:var(--gold);}
+.badge-green{background:rgba(67,160,71,0.15);color:var(--green);}
+.search-wrap{position:relative;margin-bottom:14px;}
+.search-wrap input{padding-left:36px;}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text2);font-size:13px;pointer-events:none;}
+.tabs{display:flex;gap:4px;margin-bottom:18px;background:var(--ice2);border-radius:var(--radius-sm);padding:4px;}
+.tab{flex:1;padding:8px;text-align:center;border-radius:6px;cursor:pointer;font-size:13px;color:var(--text2);border:none;background:none;transition:all .2s;}
+.tab.active{background:var(--ice3);color:var(--text);}
+.alert{border-radius:var(--radius-sm);padding:11px 15px;font-size:13px;margin-bottom:14px;}
+.alert-info{background:rgba(0,180,230,0.1);border:1px solid rgba(0,180,230,0.2);color:var(--text2);}
+.alert-warn{background:rgba(245,200,66,0.1);border:1px solid rgba(245,200,66,0.2);color:var(--gold);}
+.alert-err{background:rgba(229,57,53,0.1);border:1px solid rgba(229,57,53,0.2);color:var(--red);}
+.alert-ok{background:rgba(67,160,71,0.1);border:1px solid rgba(67,160,71,0.2);color:var(--green);}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.hidden{display:none;}
+.modal{background:var(--ice2);border:1px solid var(--border);border-radius:var(--radius);padding:28px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;}
+.modal-title{font-size:19px;font-weight:700;margin-bottom:18px;}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;}
+.prog-bar{background:var(--ice3);border-radius:4px;height:6px;overflow:hidden;margin-top:5px;}
+.prog-fill{height:100%;background:var(--accent);border-radius:4px;transition:width .5s;}
+.section-title{font-size:21px;font-weight:700;margin-bottom:5px;}
+.section-sub{color:var(--text2);font-size:14px;margin-bottom:22px;}
+.pts-rule{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px;}
+.pts-rule:last-child{border-bottom:none;}
+.pts-val{font-weight:700;color:var(--accent);font-size:15px;}
+.hist-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.hist-row:last-child{border-bottom:none;}
+.hist-time{color:var(--text2);min-width:100px;font-size:12px;}
+.hist-action{flex:1;}
+.hist-pts{font-weight:700;color:var(--accent);min-width:50px;text-align:right;}
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-state{text-align:center;padding:28px;color:var(--text2);}
+.empty{text-align:center;padding:40px 20px;color:var(--text2);}
+.empty .big{font-size:36px;margin-bottom:10px;}
+.empty h3{font-size:17px;color:var(--text);margin-bottom:7px;}
+.player-slot{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--ice3);border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:6px;}
+.remove-btn{margin-left:auto;background:none;border:none;color:var(--red);cursor:pointer;font-size:15px;opacity:.6;transition:opacity .2s;}
+.remove-btn:hover{opacity:1;}
+.two-col{display:grid;grid-template-columns:1fr 320px;gap:18px;}
+@media(max-width:800px){.two-col{grid-template-columns:1fr;}}
+.divider{border:none;border-top:1px solid var(--border);margin:18px 0;}
+.flex-between{display:flex;justify-content:space-between;align-items:center;}
+.mb-16{margin-bottom:16px;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;margin-right:5px;animation:pulse 1.2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.realtime-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;background:rgba(67,160,71,0.1);border:1px solid rgba(67,160,71,0.2);color:var(--green);border-radius:12px;padding:3px 10px;}
+@media(max-width:600px){.header-inner{gap:8px;}.logo{font-size:15px;}nav button{padding:6px 9px;font-size:12px;}}
+</style>
+</head>
+<body>
+
+<div class="ticker"><span class="ticker-inner" id="ticker-content">🏒 Fantasy NHL Liga 2024/25 · Vítejte!</span></div>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">🏒 Fantasy<span>NHL</span></div>
+    <nav>
+      <button class="active" onclick="showView('leaderboard')">🏆 Žebříček</button>
+      <button onclick="showView('myteam')">⛸ Můj tým</button>
+      <button onclick="showView('players')">👤 Hráči</button>
+      <button onclick="showView('history')">📋 Historie</button>
+      <button onclick="showView('rules')">📏 Pravidla</button>
+    </nav>
+    <div class="user-badge" id="user-badge" onclick="handleUserBadge()">Přihlásit se</div>
+  </div>
+</header>
+
+<main>
+
+<!-- LEADERBOARD -->
+<div class="view active" id="view-leaderboard">
+  <div class="flex-between mb-16">
+    <div>
+      <div class="section-title">🏆 Žebříček ligy</div>
+      <div class="section-sub" style="margin-bottom:0"><span class="realtime-badge"><span class="live-dot"></span>Sezóna 2024/25</span></div>
+    </div>
+    <button class="btn btn-outline btn-sm" onclick="refreshNHL()">↻ Aktualizovat stats</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+    <span style="font-size:13px;color:var(--text2);">Měsíc:</span>
+    <div id="month-tabs" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+  </div>
+  <div class="grid-4 mb-16">
+    <div class="stat-chip"><div class="val" id="stat-members">–</div><div class="lbl">Členů ligy</div></div>
+    <div class="stat-chip"><div class="val" id="stat-month">–</div><div class="lbl">Aktuální měsíc</div></div>
+    <div class="stat-chip"><div class="val" id="stat-goals">–</div><div class="lbl">Celkem gólů</div></div>
+    <div class="stat-chip"><div class="val" id="stat-pts" style="color:var(--gold)">–</div><div class="lbl">Výhra (Kč)</div></div>
+  </div>
+  <div id="leaderboard-list"><div class="loading-state"><div class="spinner"></div></div></div>
+</div>
+
+<!-- MY TEAM -->
+<div class="view" id="view-myteam"><div id="myteam-content"></div></div>
+
+<!-- PLAYERS -->
+<div class="view" id="view-players">
+  <div class="section-title">👤 Hráči NHL 2025/26</div>
+  <div class="section-sub">Vybírej hráče do svého týmu</div>
+  <div class="two-col">
+    <div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="player-search" placeholder="Hledat hráče nebo tým..." oninput="renderPlayers()">
+      </div>
+      <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;">
+        <button class="btn btn-sm btn-outline active-filter" onclick="setPos(this,'ALL')">Všichni</button>
+        <button class="btn btn-sm btn-outline" onclick="setPos(this,'F')">⛸ Útočníci</button>
+        <button class="btn btn-sm btn-outline" onclick="setPos(this,'D')">🛡 Obránci</button>
+        <button class="btn btn-sm btn-outline" onclick="setPos(this,'G')">🥅 Brankáři</button>
+      </div>
+      <div id="players-grid" class="grid-2"></div>
+    </div>
+    <div>
+      <div class="card" style="position:sticky;top:80px;">
+        <div class="card-header"><div class="card-icon">ℹ️</div>Bodování</div>
+        <div class="pts-rule"><span>Útočník – Gól</span><span class="pts-val">2 body</span></div>
+        <div class="pts-rule"><span>Obránce – Gól</span><span class="pts-val">3 body</span></div>
+        <div class="pts-rule"><span>Asistence</span><span class="pts-val">1 bod</span></div>
+        <div class="pts-rule"><span>🥅 Brankář – Nula</span><span class="pts-val" style="color:var(--green)">5 bodů</span></div>
+        <div class="pts-rule"><span>💰 1 bod</span><span class="pts-val" style="color:var(--gold)">= 5 Kč</span></div>
+        <hr class="divider">
+        <div class="alert alert-info">Max. <strong>5 hráčů</strong> v týmu.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div class="view" id="view-history">
+  <div class="section-title">📋 Historie</div>
+  <div class="section-sub">Záznamy akcí ligy</div>
+  <div id="history-content"></div>
+</div>
+
+<!-- RULES -->
+<div class="view" id="view-rules">
+  <div class="section-title">📏 Pravidla</div>
+  <div class="section-sub">Kompletní přehled bodování Fantasy NHL ligy</div>
+  <div class="grid-2">
+    <div class="card"><div class="card-header"><div class="card-icon">⛸</div>Útočníci</div>
+      <div class="pts-rule"><span>Gól</span><span class="pts-val">2 body</span></div>
+      <div class="pts-rule"><span>Asistence</span><span class="pts-val">1 bod</span></div>
+    </div>
+    <div class="card"><div class="card-header"><div class="card-icon">🛡</div>Obránci</div>
+      <div class="pts-rule"><span>Gól</span><span class="pts-val">3 body</span></div>
+      <div class="pts-rule"><span>Asistence</span><span class="pts-val">1 bod</span></div>
+    </div>
+    <div class="card"><div class="card-header"><div class="card-icon">🥅</div>Brankáři</div>
+      <div class="pts-rule"><span>Vychytaná nula (shutout)</span><span class="pts-val" style="color:var(--green)">5 bodů</span></div>
+      <div class="pts-rule"><span>Asistence</span><span class="pts-val">1 bod</span></div>
+    </div>
+    <div class="card"><div class="card-header"><div class="card-icon">💰</div>Výplata</div>
+      <div class="pts-rule"><span>1 bod</span><span class="pts-val" style="color:var(--gold)">5 Kč</span></div>
+      <div class="pts-rule"><span>Výplata</span><span style="color:var(--text2);font-size:13px;">Vítěz každého měsíce</span></div>
+      <div style="margin-top:10px;padding:10px;background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.2);border-radius:8px;font-size:13px;color:var(--text2);">Příklad: 50 bodů × 5 Kč = <strong style="color:var(--gold)">250 Kč</strong></div>
+    </div>
+    <div class="card"><div class="card-header"><div class="card-icon">📋</div>Základní pravidla</div>
+      <ul style="list-style:none;font-size:14px;color:var(--text2);display:flex;flex-direction:column;gap:9px;">
+        <li>✅ Každý člen vybírá <strong>5 hráčů</strong></li>
+        <li>✅ Libovolná kombinace pozic</li>
+        <li>✅ Tým zůstává celou sezónu stejný</li>
+        <li>✅ Každý měsíc nové kolo od nuly</li>
+        <li>✅ Data z <strong>NHL API</strong> – živá statistiky</li>
+        <li>💰 <strong>1 bod = 5 Kč</strong> · vítěz každý měsíc</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay hidden" id="auth-modal">
+  <div class="modal">
+    <div class="tabs" id="auth-tabs">
+      <button class="tab active" onclick="switchTab('login')">Přihlášení</button>
+      <button class="tab" onclick="switchTab('register')">Registrace</button>
+    </div>
+    <div id="auth-login">
+      <div class="modal-title">Přihlásit se</div>
+      <div id="login-err"></div>
+      <div class="form-group"><label>Přezdívka</label><input type="text" id="login-nick" placeholder="Tvoje přezdívka"></div>
+      <div class="form-group"><label>Heslo</label><input type="password" id="login-pass" placeholder="Heslo"></div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal()">Zrušit</button>
+        <button class="btn btn-primary" onclick="doLogin()">Přihlásit se</button>
+      </div>
+    </div>
+    <div id="auth-register" style="display:none;">
+      <div class="modal-title">Nový účet</div>
+      <div id="reg-err"></div>
+      <div class="form-group"><label>Přezdívka</label><input type="text" id="reg-nick" placeholder="Zvol si přezdívku"></div>
+      <div class="form-group"><label>Heslo</label><input type="password" id="reg-pass" placeholder="Min. 4 znaky"></div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal()">Zrušit</button>
+        <button class="btn btn-primary" onclick="doRegister()">Registrovat</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PLAYER MODAL -->
+<div class="modal-overlay hidden" id="player-modal">
+  <div class="modal">
+    <div id="player-modal-content"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">Zavřít</button>
+      <button class="btn btn-primary" id="add-btn">＋ Přidat do týmu</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════
+// STORAGE
+// ═══════════════════════════
+const S = {
+  get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch(e) { return null; } },
+  set: (k,v) => localStorage.setItem(k, JSON.stringify(v)),
+  del: k => localStorage.removeItem(k)
+};
+
+const USERS_KEY = 'fnhl2_users';
+const SESSION_KEY = 'fnhl2_session';
+const PLAYERS_KEY = 'fnhl2_players';
+const CACHE_TS_KEY = 'fnhl2_cache_ts';
+const HISTORY_KEY = 'fnhl2_history';
+const MONTHLY_KEY = 'fnhl2_monthly';
+
+function getUsers() { return S.get(USERS_KEY) || {}; }
+function saveUsers(u) { S.set(USERS_KEY, u); }
+function getSession() { return S.get(SESSION_KEY); }
+function setSession(u) { S.set(SESSION_KEY, u); }
+function getHistory() { return S.get(HISTORY_KEY) || []; }
+function addHistory(entry) {
+  const h = getHistory();
+  h.unshift({...entry, ts: new Date().toISOString()});
+  S.set(HISTORY_KEY, h.slice(0,100));
+}
+function getMonthly() { return S.get(MONTHLY_KEY) || {}; }
+function saveMonthly(m) { S.set(MONTHLY_KEY, m); }
+
+// ═══════════════════════════
+// MONTHS
+// ═══════════════════════════
+const MONTHS = ['Leden','Únor','Březen','Duben','Květen','Červen','Červenec','Srpen','Září','Říjen','Listopad','Prosinec'];
+function curMonthKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+function monthLabel(key) {
+  const [y,m] = key.split('-');
+  return `${MONTHS[parseInt(m)-1]} ${y}`;
+}
+
+let viewingMonth = curMonthKey();
+
+// Ensure current month exists in monthly data
+function ensureCurrentMonth() {
+  const monthly = getMonthly();
+  const key = curMonthKey();
+  if (!monthly[key]) {
+    monthly[key] = { created: Date.now(), snapshot: {} };
+    saveMonthly(monthly);
+  }
+}
+
+// ═══════════════════════════
+// STATE
+// ═══════════════════════════
+let allPlayers = [];
+let posFilter = 'ALL';
+
+// ═══════════════════════════
+// POINTS
+// ═══════════════════════════
+function getMonthStats(pid) {
+  const monthly = getMonthly();
+  const m = monthly[viewingMonth];
+  if (m && m.snapshot && m.snapshot[pid]) return m.snapshot[pid];
+  // Fallback to live stats for current month
+  if (viewingMonth === curMonthKey()) {
+    const p = allPlayers.find(x => x.id == pid);
+    return p ? {goals: p.goals||0, assists: p.assists||0, shutouts: p.shutouts||0} : null;
+  }
+  return null;
+}
+
+function calcPts(p, stats) {
+  if (!p || !stats) return 0;
+  if (p.pos === 'G') return (stats.shutouts||0)*5 + (stats.assists||0);
+  return (stats.goals||0)*(p.pos==='D'?3:2) + (stats.assists||0);
+}
+
+function playerPts(pid) {
+  const p = allPlayers.find(x => x.id == pid);
+  if (!p) return 0;
+  return calcPts(p, getMonthStats(pid));
+}
+
+function userPts(user) {
+  if (!user?.players?.length) return 0;
+  return user.players.reduce((s, pid) => s + playerPts(pid), 0);
+}
+
+// ═══════════════════════════
+// NHL API
+// ═══════════════════════════
+const PROXY = 'https://api.allorigins.win/raw?url=';
+const NHL = 'https://api.nhle.com/stats/rest/en';
+// GitHub raw URL pro stats.json - automaticky aktualizováno každý den
+const GITHUB_STATS = 'https://raw.githubusercontent.com/janhrdlicka241/fantasy-nhl/main/stats.json';
+
+async function refreshNHL() {
+  const btn = document.querySelector('[onclick="refreshNHL()"]');
+  if (btn) { btn.disabled = true; btn.textContent = '↻ Načítám...'; }
+  try {
+    // Nejdřív zkus načíst z GitHubu (automaticky aktualizováno každý den)
+    let liveStats = null;
+    let updatedAt = null;
+    let todayGames = [];
+
+    try {
+      const ghRes = await fetch(GITHUB_STATS + '?t=' + Date.now());
+      const ghData = await ghRes.json();
+      if (ghData.stats) {
+        liveStats = ghData.stats;
+        updatedAt = ghData.updatedAt;
+        todayGames = ghData.todayGames || [];
+        console.log('Načteno z GitHub:', updatedAt);
+      }
+    } catch(e) {
+      console.log('GitHub nedostupný, zkouším NHL API přímo...');
+    }
+
+    // Fallback: přímé volání NHL API
+    if (!liveStats) {
+      const season = '20242025';
+      const [sk, gl] = await Promise.all([
+        fetch(PROXY + encodeURIComponent(`${NHL}/skater/summary?limit=500&start=0&sort=points&cayenneExp=seasonId=${season}%20and%20gameTypeId=2`)).then(r=>r.json()),
+        fetch(PROXY + encodeURIComponent(`${NHL}/goalie/summary?limit=100&start=0&sort=wins&cayenneExp=seasonId=${season}%20and%20gameTypeId=2`)).then(r=>r.json())
+      ]);
+      liveStats = {};
+      (sk.data||[]).forEach(p => {
+        liveStats[p.playerId] = {goals:p.goals||0, assists:p.assists||0, gp:p.gamesPlayed||0, shutouts:0};
+      });
+      (gl.data||[]).forEach(p => {
+        liveStats[p.playerId] = {goals:0, assists:p.assists||0, gp:p.gamesPlayed||0, shutouts:p.shutouts||0, wins:p.wins||0};
+      });
+    }
+
+    // Aktualizuj allPlayers
+    allPlayers.forEach(p => {
+      const s = liveStats[p.id] || liveStats[String(p.id)];
+      if (!s) return;
+      if (p.pos === 'G') {
+        p.wins = s.wins||0;
+        p.shutouts = s.shutouts||0;
+        p.gp = s.gp||0;
+      } else {
+        p.goals = s.goals||0;
+        p.assists = s.assists||0;
+        p.gp = s.gp||0;
+        p.pts_nhl = s.points||0;
+      }
+    });
+
+    // Měsíční baseline systém
+    const monthly = getMonthly();
+    const key = curMonthKey();
+    if (!monthly[key]) monthly[key] = { created: Date.now() };
+
+    if (!monthly[key].baseline) {
+      monthly[key].baseline = JSON.parse(JSON.stringify(liveStats));
+      monthly[key].baselineDate = new Date().toISOString();
+    }
+
+    const baseline = monthly[key].baseline;
+    const snap = {};
+    Object.entries(liveStats).forEach(([pid, cur]) => {
+      const base = baseline[pid] || {goals:0, assists:0, shutouts:0, gp:0};
+      snap[pid] = {
+        goals:    Math.max(0, (cur.goals||0)    - (base.goals||0)),
+        assists:  Math.max(0, (cur.assists||0)  - (base.assists||0)),
+        shutouts: Math.max(0, (cur.shutouts||0) - (base.shutouts||0)),
+        gp:       Math.max(0, (cur.gp||0)       - (base.gp||0)),
+      };
+    });
+
+    monthly[key].snapshot = snap;
+    monthly[key].updatedAt = Date.now();
+    saveMonthly(monthly);
+    S.set(PLAYERS_KEY, allPlayers);
+    S.set(CACHE_TS_KEY, Date.now());
+
+    // Dnešní zápasy do tickeru
+    if (todayGames.length) {
+      const text = todayGames.map(g => {
+        const score = g.awayScore != null ? ` ${g.awayScore}:${g.homeScore}` : '';
+        const st = g.state === 'LIVE' ? ' 🔴' : (g.state === 'OFF'||g.state === 'FINAL') ? ' Fin.' : '';
+        return `${g.away} @ ${g.home}${score}${st}  ·  `;
+      }).join('');
+      document.getElementById('ticker-content').textContent = text + text;
+    }
+
+    addHistory({type:'refresh', msg:`Stats aktualizovány${updatedAt ? ' · data z ' + new Date(updatedAt).toLocaleDateString('cs-CZ') : ''}`});
+    renderAll();
+
+    const timeStr = updatedAt ? new Date(updatedAt).toLocaleString('cs-CZ') : 'právě teď';
+    alert(`✅ Statistiky aktualizovány!
+Data z: ${timeStr}`);
+  } catch(e) {
+    console.error(e);
+    alert('⚠️ Nepodařilo se načíst statistiky. Zkus to znovu.');
+  }
+  if (btn) { btn.disabled = false; btn.textContent = '↻ Aktualizovat stats'; }
+}
+
+// ═══════════════════════════
+// INIT PLAYERS
+// ═══════════════════════════
+function initPlayers() {
+  const cached = S.get(PLAYERS_KEY);
+  const ts = S.get(CACHE_TS_KEY);
+  if (cached?.length && ts && (Date.now()-ts) < 3600000) {
+    allPlayers = cached;
+  } else {
+    allPlayers = getDefaultPlayers();
+    S.set(PLAYERS_KEY, allPlayers);
+    S.set(CACHE_TS_KEY, Date.now());
+  }
+}
+
+// ═══════════════════════════
+// LEADERBOARD
+// ═══════════════════════════
+function renderMonthTabs() {
+  const monthly = getMonthly();
+  const cur = curMonthKey();
+  let months = Object.keys(monthly).sort();
+  if (!months.includes(cur)) months.push(cur);
+  months.sort();
+
+  document.getElementById('month-tabs').innerHTML = months.map(key => {
+    const isCur = key === cur;
+    const isActive = key === viewingMonth;
+    return `<button class="month-tab ${isActive?'active':''}" onclick="setMonth('${key}')">
+      ${monthLabel(key)}${!isCur?'<span class="archive-badge">archiv</span>':''}
+    </button>`;
+  }).join('');
+
+  document.getElementById('stat-month').textContent = monthLabel(viewingMonth);
+}
+
+function setMonth(key) {
+  viewingMonth = key;
+  renderMonthTabs();
+  renderLeaderboard();
+  updateStats();
+}
+
+function renderLeaderboard() {
+  const users = getUsers();
+  const cur = getSession();
+  const list = document.getElementById('leaderboard-list');
+  const isArchive = viewingMonth !== curMonthKey();
+
+  const entries = Object.entries(users).map(([nick, u]) => ({
+    nick, pts: userPts(u),
+    players: (u.players||[]).map(pid => allPlayers.find(x=>x.id==pid)).filter(Boolean)
+  })).sort((a,b) => b.pts - a.pts);
+
+  if (!entries.length) {
+    list.innerHTML = `<div class="empty"><div class="big">🏒</div><h3>Liga je prázdná</h3><p>Zaregistruj se jako první!</p><br><button class="btn btn-primary" onclick="openAuth()">Přihlásit se / Registrovat</button></div>`;
+    return;
+  }
+
+  list.innerHTML = entries.map((e,i) => {
+    const emoji = i===0?'🥇':i===1?'🥈':i===2?'🥉':`#${i+1}`;
+    const rc = i===0?'r1':i===1?'r2':i===2?'r3':'rn';
+    const isMe = e.nick === cur;
+    const isWinner = i===0 && isArchive;
+    const chips = e.players.map(p =>
+      `<span class="chip ${p.pos==='D'?'def':p.pos==='G'?'goa':'fwd'}">${p.name.split(' ').pop()}</span>`
+    ).join('') || '<span style="font-size:11px;color:var(--text2)">– žádní hráči –</span>';
+
+    return `<div class="lb-row ${isMe?'me':''} ${isWinner?'winner':''}">
+      <div class="rank ${rc}">${emoji}</div>
+      <div class="lb-avatar">${e.nick.slice(0,2).toUpperCase()}</div>
+      <div class="lb-info">
+        <div class="lb-name">${e.nick}
+          ${isMe?'<span class="badge badge-blue">Já</span>':''}
+          ${isWinner?'<span class="badge badge-gold">🏆 Vítěz</span>':''}
+        </div>
+        <div class="lb-chips">${chips}</div>
+      </div>
+      <div class="lb-right">
+        <div class="lb-pts">${e.pts}</div>
+        <div class="lb-czk">${e.pts*5} Kč</div>
+        <div class="lb-lbl">bodů</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateStats() {
+  const users = getUsers();
+  const entries = Object.values(users);
+  document.getElementById('stat-members').textContent = entries.length;
+  let totalGoals = 0, maxPts = 0;
+  entries.forEach(u => {
+    const pts = userPts(u);
+    if (pts > maxPts) maxPts = pts;
+    (u.players||[]).forEach(pid => {
+      const s = getMonthStats(pid);
+      if (s) totalGoals += s.goals||0;
+    });
+  });
+  document.getElementById('stat-goals').textContent = totalGoals;
+  document.getElementById('stat-pts').textContent = (maxPts*5) + ' Kč';
+}
+
+// ═══════════════════════════
+// MY TEAM
+// ═══════════════════════════
+function renderMyTeam() {
+  const cont = document.getElementById('myteam-content');
+  const nick = getSession();
+  if (!nick) {
+    cont.innerHTML = `<div class="empty"><div class="big">🔐</div><h3>Nejsi přihlášen</h3><br><button class="btn btn-primary" onclick="openAuth()">Přihlásit se</button></div>`;
+    return;
+  }
+  const users = getUsers();
+  const user = users[nick];
+  const pids = user?.players || [];
+  const myPlayers = pids.map(pid => allPlayers.find(x=>x.id==pid)).filter(Boolean);
+  const totalPts = userPts(user);
+  const fwd = myPlayers.filter(p=>p.pos==='F');
+  const def = myPlayers.filter(p=>p.pos==='D');
+  const gte = myPlayers.filter(p=>p.pos==='G');
+
+  cont.innerHTML = `
+  <div class="flex-between mb-16">
+    <div>
+      <div class="section-title">⛸ Můj tým – ${nick}</div>
+      <div class="section-sub" style="margin-bottom:0"><span class="realtime-badge"><span class="live-dot"></span>Sezóna 2024/25</span></div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:30px;font-weight:800;color:var(--accent)">${totalPts}</div>
+      <div style="font-size:12px;color:var(--gold);font-weight:700">${totalPts*5} Kč</div>
+      <div style="font-size:11px;color:var(--text2)">bodů tento měsíc</div>
+    </div>
+  </div>
+  <div class="grid-4 mb-16">
+    <div class="stat-chip"><div class="val">${myPlayers.length}/5</div><div class="lbl">Hráčů</div></div>
+    <div class="stat-chip"><div class="val">${myPlayers.filter(p=>p.pos!=='G').reduce((a,p)=>a+(getMonthStats(p.id)?.goals||0),0)}</div><div class="lbl">Góly</div></div>
+    <div class="stat-chip"><div class="val">${myPlayers.reduce((a,p)=>a+(getMonthStats(p.id)?.assists||0),0)}</div><div class="lbl">Asistence</div></div>
+    <div class="stat-chip"><div class="val">${gte.reduce((a,p)=>a+(getMonthStats(p.id)?.shutouts||0),0)}</div><div class="lbl">Nuly</div></div>
+  </div>
+  ${pids.length < 5 ? `<div class="alert alert-info mb-16">Máš ${5-pids.length} volné místo! <button class="btn btn-sm btn-outline" style="margin-left:8px" onclick="showView('players')">👤 Vybrat hráče</button></div>` : ''}
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <div class="card-header"><div class="card-icon">⛸</div>Útočníci</div>
+        ${fwd.length?fwd.map(slotHTML).join(''):'<p style="color:var(--text2);font-size:14px">Žádní útočníci</p>'}
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="card-header"><div class="card-icon">🛡</div>Obránci</div>
+        ${def.length?def.map(slotHTML).join(''):'<p style="color:var(--text2);font-size:14px">Žádní obránci</p>'}
+      </div>
+      ${gte.length?`<div class="card" style="margin-top:14px"><div class="card-header"><div class="card-icon">🥅</div>Brankáři</div>${gte.map(slotHTML).join('')}</div>`:''}
+    </div>
+    <div>
+      <div class="card" style="position:sticky;top:80px">
+        <div class="card-header"><div class="card-icon">📊</div>Rozbor bodů</div>
+        ${myPlayers.length ? myPlayers.map(p => {
+          const stats = getMonthStats(p.id);
+          const pts = calcPts(p, stats);
+          const max = Math.max(...myPlayers.map(x => calcPts(x, getMonthStats(x.id))), 1);
+          const detail = p.pos==='G' ? `${stats?.shutouts||0} nul` : `${stats?.goals||0}G · ${stats?.assists||0}A`;
+          return `<div style="margin-bottom:13px">
+            <div class="flex-between" style="margin-bottom:3px">
+              <span style="font-size:13px">${p.name} <span class="badge ${p.pos==='D'?'badge-gold':p.pos==='G'?'badge-green':'badge-blue'}">${p.pos}</span></span>
+              <span style="font-weight:700;color:var(--accent)">${pts} b · <span style="color:var(--gold)">${pts*5} Kč</span></span>
+            </div>
+            <div class="prog-bar"><div class="prog-fill" style="width:${Math.round(pts/max*100)}%"></div></div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px">${detail}</div>
+          </div>`;
+        }).join('') : '<p style="color:var(--text2);font-size:14px">Žádní hráči</p>'}
+      </div>
+    </div>
+  </div>`;
+}
+
+function slotHTML(p) {
+  const stats = getMonthStats(p.id);
+  const pts = calcPts(p, stats);
+  const detail = p.pos==='G' ? `${stats?.shutouts||0} nul` : `${stats?.goals||0}G ${stats?.assists||0}A`;
+  return `<div class="player-slot">
+    <div>
+      <div style="font-weight:600;font-size:14px">${p.name}</div>
+      <div style="font-size:12px;color:var(--text2)">${p.team} · ${p.pos==='F'?'Útočník':p.pos==='D'?'Obránce':'Brankář'}</div>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+      <span style="font-size:11px;color:var(--text2)">${detail}</span>
+      <span style="font-weight:700;color:var(--accent)">${pts}b</span>
+      <button class="remove-btn" onclick="removePlayer(${p.id})">✕</button>
+    </div>
+  </div>`;
+}
+
+function removePlayer(pid) {
+  const nick = getSession();
+  const users = getUsers();
+  users[nick].players = (users[nick].players||[]).filter(id=>id!=pid);
+  saveUsers(users);
+  const p = allPlayers.find(x=>x.id==pid);
+  addHistory({type:'remove', msg:`${nick} odebral ${p?.name||pid}`});
+  renderAll();
+}
+
+// ═══════════════════════════
+// PLAYERS GRID
+// ═══════════════════════════
+function renderPlayers() {
+  const grid = document.getElementById('players-grid');
+  const q = (document.getElementById('player-search')?.value||'').toLowerCase();
+  let list = allPlayers.filter(p => {
+    if (posFilter!=='ALL' && p.pos!==posFilter) return false;
+    if (q && !p.name.toLowerCase().includes(q) && !p.team.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  if (!list.length) {
+    grid.innerHTML = '<div class="empty"><div class="big">🔍</div><h3>Nic nenalezeno</h3></div>';
+    return;
+  }
+
+  const display = (posFilter==='ALL' && !q) ? list.slice(0,60) : list;
+  grid.innerHTML = display.map(p => {
+    const stats = getMonthStats(p.id);
+    const pts = calcPts(p, stats);
+    const posLabel = p.pos==='F'?'Útočník':p.pos==='D'?'Obránce':'Brankář';
+    const s1 = p.pos==='G'
+      ? `<div class="p-stat"><div class="sv">${p.wins||0}</div><div class="sl">Výhry</div></div><div class="p-stat"><div class="sv" style="color:var(--green)">${stats?.shutouts||p.shutouts||0}</div><div class="sl">Nuly</div></div>`
+      : `<div class="p-stat"><div class="sv">${stats?.goals||p.goals||0}</div><div class="sl">Góly</div></div><div class="p-stat"><div class="sv">${stats?.assists||p.assists||0}</div><div class="sl">Asistence</div></div>`;
+    return `<div class="player-card" onclick="openPlayer(${p.id})">
+      <div class="p-name">${p.name}</div>
+      <div class="p-team">${p.team} · ${p.gp||0} zápasů</div>
+      <span class="p-pos pos-${p.pos}">${posLabel}</span>
+      <div class="p-stats">${s1}<div class="p-stat pts-stat"><div class="sv">${pts}</div><div class="sl">Body FL</div></div></div>
+    </div>`;
+  }).join('');
+
+  if (posFilter==='ALL' && !q && list.length>60) {
+    grid.innerHTML += `<div style="text-align:center;padding:14px;color:var(--text2);font-size:13px">Zobrazeno 60 z ${list.length} · vyber filtr pozice pro všechny</div>`;
+  }
+}
+
+function setPos(btn, pos) {
+  posFilter = pos;
+  document.querySelectorAll('.active-filter').forEach(b=>{b.classList.remove('active-filter');b.style.cssText='';});
+  btn.classList.add('active-filter');
+  btn.style.borderColor='var(--accent)';
+  btn.style.color='var(--accent)';
+  renderPlayers();
+}
+
+// ═══════════════════════════
+// PLAYER MODAL
+// ═══════════════════════════
+function openPlayer(pid) {
+  const p = allPlayers.find(x=>x.id==pid);
+  if (!p) return;
+  const nick = getSession();
+  const users = getUsers();
+  const pids = users[nick]?.players || [];
+  const alreadyHave = pids.some(id=>id==pid);
+  const full = pids.length >= 5;
+  const stats = getMonthStats(pid);
+  const pts = calcPts(p, stats);
+  const posLabel = p.pos==='F'?'⛸ Útočník':p.pos==='D'?'🛡 Obránce':'🥅 Brankář';
+
+  document.getElementById('player-modal-content').innerHTML = `
+    <div style="margin-bottom:18px">
+      <div style="font-size:21px;font-weight:800;margin-bottom:4px">${p.name}</div>
+      <span class="p-pos pos-${p.pos}">${posLabel}</span>
+      <span style="margin-left:8px;font-size:13px;color:var(--text2)">${p.team} · 2024/25</span>
+    </div>
+    <div class="grid-4 mb-16">
+      ${p.pos!=='G'
+        ? `<div class="stat-chip"><div class="val">${stats?.goals||0}</div><div class="lbl">Góly</div></div>
+           <div class="stat-chip"><div class="val">${stats?.assists||0}</div><div class="lbl">Asistence</div></div>
+           <div class="stat-chip"><div class="val">${p.gp||0}</div><div class="lbl">Zápasy</div></div>
+           <div class="stat-chip"><div class="val" style="color:var(--accent)">${pts}</div><div class="lbl">Fantasy body</div></div>`
+        : `<div class="stat-chip"><div class="val">${p.wins||0}</div><div class="lbl">Výhry</div></div>
+           <div class="stat-chip"><div class="val" style="color:var(--green)">${stats?.shutouts||p.shutouts||0}</div><div class="lbl">Nuly</div></div>
+           <div class="stat-chip"><div class="val">${p.savePct||'–'}</div><div class="lbl">Úspěšnost%</div></div>
+           <div class="stat-chip"><div class="val" style="color:var(--accent)">${pts}</div><div class="lbl">Fantasy body</div></div>`}
+    </div>
+    ${p.pos!=='G'
+      ? `<div class="alert alert-info">${stats?.goals||0}G × ${p.pos==='D'?3:2} + ${stats?.assists||0}A × 1 = <strong>${pts} bodů</strong> = <strong style="color:var(--gold)">${pts*5} Kč</strong></div>`
+      : `<div class="alert alert-info">${stats?.shutouts||0} nul × 5 + ${stats?.assists||0}A = <strong>${pts} bodů</strong> = <strong style="color:var(--gold)">${pts*5} Kč</strong></div>`}
+    ${alreadyHave?'<div class="alert alert-ok">✅ Tohoto hráče již máš v týmu.</div>':''}
+    ${!nick?'<div class="alert alert-warn">Přihlas se pro přidání hráče.</div>':''}
+    ${full&&!alreadyHave?'<div class="alert alert-warn">Tým je plný (5/5).</div>':''}
+  `;
+
+  const btn = document.getElementById('add-btn');
+  btn.disabled = !nick || alreadyHave || (full && !alreadyHave);
+  btn.textContent = alreadyHave?'✅ Již v týmu':full?'⛔ Tým je plný':!nick?'🔐 Přihlas se':'＋ Přidat do týmu';
+  btn.onclick = () => addPlayer(pid);
+  document.getElementById('player-modal').classList.remove('hidden');
+}
+
+function addPlayer(pid) {
+  const nick = getSession();
+  const users = getUsers();
+  if (!users[nick].players) users[nick].players = [];
+  if (users[nick].players.length >= 5) return;
+  if (users[nick].players.some(id=>id==pid)) return;
+  users[nick].players.push(pid);
+  saveUsers(users);
+  const p = allPlayers.find(x=>x.id==pid);
+  addHistory({type:'add', msg:`${nick} přidal ${p?.name||pid}`});
+  closeModal();
+  renderAll();
+}
+
+// ═══════════════════════════
+// HISTORY
+// ═══════════════════════════
+function renderHistory() {
+  const cont = document.getElementById('history-content');
+  const hist = getHistory();
+  if (!hist.length) {
+    cont.innerHTML = '<div class="empty"><div class="big">📋</div><h3>Zatím žádná historie</h3></div>';
+    return;
+  }
+  const icons = {refresh:'↻',add:'＋',remove:'✕',login:'👤',register:'🎉'};
+  cont.innerHTML = `<div class="card">${hist.slice(0,60).map(h=>{
+    const d = new Date(h.ts);
+    const t = `${d.toLocaleDateString('cs-CZ')} ${d.toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit'})}`;
+    return `<div class="hist-row"><div class="hist-time">${t}</div><div class="hist-action">${icons[h.type]||'•'} ${h.msg}</div></div>`;
+  }).join('')}</div>`;
+}
+
+// ═══════════════════════════
+// AUTH
+// ═══════════════════════════
+function openAuth() { document.getElementById('auth-modal').classList.remove('hidden'); }
+function handleUserBadge() {
+  if (getSession()) {
+    if (confirm(`Odhlásit se (${getSession()})?`)) {
+      setSession(null);
+      renderAll();
+    }
+  } else { openAuth(); }
+}
+
+function doLogin() {
+  const nick = document.getElementById('login-nick').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-err');
+  const users = getUsers();
+  if (!users[nick] || users[nick].pass !== btoa(pass)) {
+    err.innerHTML = '<div class="alert alert-err">Špatná přezdívka nebo heslo.</div>'; return;
+  }
+  setSession(nick);
+  addHistory({type:'login', msg:`${nick} se přihlásil`});
+  closeModal(); renderAll();
+}
+
+function doRegister() {
+  const nick = document.getElementById('reg-nick').value.trim();
+  const pass = document.getElementById('reg-pass').value;
+  const err = document.getElementById('reg-err');
+  const users = getUsers();
+  if (!nick || nick.length < 2) { err.innerHTML = '<div class="alert alert-err">Přezdívka musí mít alespoň 2 znaky.</div>'; return; }
+  if (!pass || pass.length < 4) { err.innerHTML = '<div class="alert alert-err">Heslo musí mít alespoň 4 znaky.</div>'; return; }
+  if (users[nick]) { err.innerHTML = '<div class="alert alert-err">Tato přezdívka je obsazena.</div>'; return; }
+  users[nick] = { pass: btoa(pass), players: [], joined: new Date().toISOString() };
+  saveUsers(users);
+  setSession(nick);
+  addHistory({type:'register', msg:`${nick} se připojil do ligy! 🎉`});
+  closeModal();
+  showView('players');
+  renderAll();
+}
+
+function updateBadge() {
+  const nick = getSession();
+  const badge = document.getElementById('user-badge');
+  badge.textContent = nick ? `⛸ ${nick}` : 'Přihlásit se';
+  badge.className = 'user-badge' + (nick?' logged':'');
+}
+
+// ═══════════════════════════
+// NAV + MODALS
+// ═══════════════════════════
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById(`view-${name}`).classList.add('active');
+  const map = {leaderboard:0,myteam:1,players:2,history:3,rules:4};
+  if (map[name]!==undefined) document.querySelectorAll('nav button')[map[name]].classList.add('active');
+  if (name==='myteam') renderMyTeam();
+  if (name==='players') renderPlayers();
+  if (name==='leaderboard') { renderLeaderboard(); updateStats(); }
+  if (name==='history') renderHistory();
+}
+
+function closeModal() {
+  document.getElementById('auth-modal').classList.add('hidden');
+  document.getElementById('player-modal').classList.add('hidden');
+}
+
+function switchTab(tab) {
+  document.getElementById('auth-login').style.display = tab==='login'?'block':'none';
+  document.getElementById('auth-register').style.display = tab==='register'?'block':'none';
+  document.querySelectorAll('#auth-tabs .tab').forEach((t,i)=>t.classList.toggle('active',(i===0)===(tab==='login')));
+}
+
+['auth-modal','player-modal'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',function(e){if(e.target===this)closeModal();});
+});
+
+function renderAll() {
+  updateBadge();
+  renderMonthTabs();
+  renderLeaderboard();
+  updateStats();
+  renderMyTeam();
+  renderPlayers();
+  renderHistory();
+}
+
+// ═══════════════════════════
+// TICKER
+// ═══════════════════════════
+async function initTicker() {
+  try {
+    const r = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://api-web.nhle.com/v1/score/now'));
+    const data = await r.json();
+    const games = data.games||[];
+    if (!games.length) { document.getElementById('ticker-content').textContent = 'Dnes nejsou žádné zápasy NHL · '; return; }
+    const text = games.map(g=>{
+      const score = g.awayTeam?.score!=null ? ` ${g.awayTeam.score}:${g.homeTeam.score}` : '';
+      const st = g.gameState==='LIVE'?' 🔴 LIVE':(g.gameState==='OFF'||g.gameState==='FINAL')?' Fin.':'';
+      return `${g.awayTeam?.abbrev||'?'} @ ${g.homeTeam?.abbrev||'?'}${score}${st}  ·  `;
+    }).join('');
+    document.getElementById('ticker-content').textContent = text+text;
+  } catch(e) {}
+}
+
+// ═══════════════════════════
+// BOOT
+// ═══════════════════════════
+initPlayers();
+ensureCurrentMonth();
+renderAll();
+initTicker();
+setInterval(initTicker, 120000);
+
+// ═══════════════════════════
+// DEFAULT PLAYERS 2025/26
+// ═══════════════════════════
+function getDefaultPlayers() {
+  return [
+    // FORWARDS
+    {id:8478402,name:'Connor McDavid',team:'EDM',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8477493,name:'Leon Draisaitl',team:'EDM',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8477987,name:'Ryan Nugent-Hopkins',team:'EDM',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480762,name:'Zach Hyman',team:'EDM',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8476460,name:'Darnell Nurse',team:'EDM',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8477934,name:'Nathan MacKinnon',team:'COL',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479325,name:'Mikko Rantanen',team:'COL',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480032,name:'Valeri Nichushkin',team:'COL',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481559,name:'Casey Mittelstadt',team:'COL',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481528,name:'Jonathan Drouin',team:'COL',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8476981,name:'Jack Eichel',team:'VGK',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479987,name:'Mark Stone',team:'VGK',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481559,name:'Tomas Hertl',team:'VGK',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480762,name:'Ivan Barbashev',team:'VGK',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480801,name:'Nikita Kucherov',team:'TBL',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8482671,name:'Brayden Point',team:'TBL',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479361,name:'Jake Guentzel',team:'TBL',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8478476,name:'Anthony Cirelli',team:'TBL',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8476396,name:'Steven Stamkos',team:'NSH',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479318,name:'David Pastrnak',team:'BOS',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8478444,name:'Pavel Zacha',team:'BOS',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481554,name:'Elias Lindholm',team:'BOS',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480456,name:'Jake DeBrusk',team:'BOS',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8471214,name:'Auston Matthews',team:'TOR',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479339,name:'Mitch Marner',team:'TOR',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480013,name:'William Nylander',team:'TOR',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8478455,name:'John Tavares',team:'TOR',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479415,name:'Matthew Knies',team:'TOR',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480032,name:'Max Domi',team:'TOR',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481528,name:'Matthew Tkachuk',team:'FLA',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8478550,name:'Aleksander Barkov',team:'FLA',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479339,name:'Sam Reinhart',team:'FLA',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481528,name:'Carter Verhaeghe',team:'FLA',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481582,name:'Eetu Luostarinen',team:'FLA',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480801,name:'Jack Hughes',team:'NJD',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480774,name:'Jesper Bratt',team:'NJD',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479339,name:'Timo Meier',team:'NJD',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481582,name:'Dawson Mercer',team:'NJD',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480456,name:'Artemi Panarin',team:'NYR',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479420,name:'Mika Zibanejad',team:'NYR',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479420,name:'Chris Kreider',team:'NYR',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481600,name:'Alexis Lafreniere',team:'NYR',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8482655,name:'Kaapo Kakko',team:'NYR',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481600,name:'Filip Chytil',team:'NYR',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8478483,name:'Sebastian Aho',team:'CAR',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481554,name:'Andrei Svechnikov',team:'CAR',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479343,name:'Martin Necas',team:'CAR',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480787,name:'Teuvo Teravainen',team:'CAR',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480787,name:'Jordan Staal',team:'CAR',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8478476,name:'Roope Hintz',team:'DAL',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479415,name:'Jason Robertson',team:'DAL',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8478455,name:'Tyler Seguin',team:'DAL',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481600,name:'Mason Marchment',team:'DAL',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8476460,name:'Matt Duchene',team:'DAL',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480032,name:'Kirill Kaprizov',team:'MIN',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481619,name:'Marco Rossi',team:'MIN',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479343,name:'Matt Boldy',team:'MIN',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480801,name:'Joel Eriksson Ek',team:'MIN',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8478476,name:'Kyle Connor',team:'WPG',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480145,name:'Mark Scheifele',team:'WPG',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479343,name:'Nikolaj Ehlers',team:'WPG',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481582,name:'Gabriel Vilardi',team:'WPG',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481533,name:'Cole Perfetti',team:'WPG',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481600,name:'Tim Stutzle',team:'OTT',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481582,name:'Brady Tkachuk',team:'OTT',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8476346,name:'Claude Giroux',team:'OTT',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480420,name:'Alex Batherson',team:'OTT',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481582,name:'Josh Norris',team:'OTT',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480420,name:'Elias Pettersson',team:'VAN',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480787,name:'J.T. Miller',team:'VAN',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481554,name:'Brock Boeser',team:'VAN',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480145,name:'Conor Garland',team:'VAN',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481559,name:'Cole Caufield',team:'MTL',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481586,name:'Nick Suzuki',team:'MTL',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8482104,name:'Juraj Slafkovsky',team:'MTL',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479343,name:'Josh Anderson',team:'MTL',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8477956,name:'Sidney Crosby',team:'PIT',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479325,name:'Evgeni Malkin',team:'PIT',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480420,name:'Rickard Rakell',team:'PIT',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8478550,name:'Alex Ovechkin',team:'WSH',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8478449,name:'Tom Wilson',team:'WSH',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481600,name:'Dylan Strome',team:'WSH',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8482104,name:'Connor McMichael',team:'WSH',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8476460,name:'Patrick Kane',team:'DET',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8478444,name:'Dylan Larkin',team:'DET',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8476454,name:'Alex DeBrincat',team:'DET',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481619,name:'Lucas Raymond',team:'DET',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479415,name:'Tage Thompson',team:'BUF',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481554,name:'JJ Peterka',team:'BUF',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480801,name:'Dylan Cozens',team:'BUF',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481554,name:'Zach Benson',team:'BUF',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480420,name:'Alex Tuch',team:'BUF',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479420,name:'Nazem Kadri',team:'CGY',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481533,name:'Yegor Sharangovich',team:'CGY',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479987,name:'Adrian Kempe',team:'LAK',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8477987,name:'Phillip Danault',team:'LAK',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480456,name:'Anze Kopitar',team:'LAK',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479987,name:'Quinton Byfield',team:'LAK',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480145,name:'Kevin Fiala',team:'LAK',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8482655,name:'Matty Beniers',team:'SEA',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8482699,name:'Shane Wright',team:'SEA',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481533,name:'Jared McCann',team:'SEA',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8476396,name:'Ryan O\'Reilly',team:'NSH',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481619,name:'Jonathan Marchessault',team:'NSH',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8482104,name:'Philip Tomasino',team:'NSH',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480420,name:'Pavel Buchnevich',team:'STL',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481586,name:'Robert Thomas',team:'STL',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8476346,name:'Jordan Kyrou',team:'STL',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480032,name:'Brayden Schenn',team:'STL',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481533,name:'Travis Konecny',team:'PHI',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481619,name:'Owen Tippett',team:'PHI',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481533,name:'Sean Couturier',team:'PHI',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8478455,name:'Bo Horvat',team:'NYI',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479987,name:'Mathew Barzal',team:'NYI',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8476346,name:'Anders Lee',team:'NYI',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8483515,name:'Macklin Celebrini',team:'SJS',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8482699,name:'Will Smith',team:'SJS',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480456,name:'Tyler Toffoli',team:'SJS',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479987,name:'Mikael Granlund',team:'SJS',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481554,name:'Trevor Zegras',team:'ANA',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8483516,name:'Leo Carlsson',team:'ANA',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481533,name:'Mason McTavish',team:'ANA',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481619,name:'Cutter Gauthier',team:'ANA',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8483590,name:'Adam Fantilli',team:'CBJ',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480032,name:'Boone Jenner',team:'CBJ',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481533,name:'Kent Johnson',team:'CBJ',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8483528,name:'Connor Bedard',team:'CHI',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8482104,name:'Frank Nazar',team:'CHI',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8482104,name:'Lukas Reichel',team:'CHI',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481533,name:'Logan Cooley',team:'UTA',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8482655,name:'Clayton Keller',team:'UTA',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480032,name:'Dylan Guenther',team:'UTA',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481533,name:'Mikhail Sergachev',team:'UTA',pos:'F',goals:0,assists:0,gp:0,pts_nhl:0},
+    // DEFENSEMEN
+    {id:8476453,name:'Cale Makar',team:'COL',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480800,name:'Quinn Hughes',team:'VAN',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481522,name:'Adam Fox',team:'NYR',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8482468,name:'Lane Hutson',team:'MTL',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8482671,name:'Rasmus Dahlin',team:'BUF',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8476467,name:'Brent Burns',team:'CAR',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8477932,name:'Drew Doughty',team:'LAK',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480013,name:'Miro Heiskanen',team:'DAL',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481600,name:'Jakob Chychrun',team:'WSH',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8478476,name:'Morgan Rielly',team:'TOR',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479325,name:'Shea Theodore',team:'VGK',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480787,name:'Dougie Hamilton',team:'NJD',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479420,name:'Roman Josi',team:'NSH',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479323,name:'Evan Bouchard',team:'EDM',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480145,name:'Noah Dobson',team:'NYI',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481554,name:'Moritz Seider',team:'DET',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8482655,name:'Owen Power',team:'BUF',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480145,name:'Brandon Montour',team:'FLA',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479343,name:'Josh Morrissey',team:'WPG',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8478498,name:'Hampus Lindholm',team:'BOS',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480645,name:'Devon Toews',team:'COL',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479415,name:'Travis Sanheim',team:'PHI',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481554,name:'Zach Werenski',team:'CBJ',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8478483,name:'Ryan Pulock',team:'NYI',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8481619,name:'Jamie Drysdale',team:'PHI',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8477956,name:'Alex Pietrangelo',team:'VGK',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479987,name:'Dmitry Orlov',team:'CAR',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8478439,name:'Jaccob Slavin',team:'CAR',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8482699,name:'Simon Edvinsson',team:'DET',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480800,name:'Jacob Trouba',team:'NYR',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8482104,name:'David Jiricek',team:'CBJ',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8483528,name:'Kevin Korchinski',team:'CHI',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480420,name:'Matt Dumba',team:'UTA',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8476883,name:'John Carlson',team:'WSH',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8482671,name:'Rasmus Andersson',team:'CGY',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8479406,name:'Ryan McDonagh',team:'NSH',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    {id:8480762,name:'Shea Weber',team:'MTL',pos:'D',goals:0,assists:0,gp:0,pts_nhl:0},
+    // GOALIES
+    {id:8480797,name:'Connor Hellebuyck',team:'WPG',pos:'G',goals:0,assists:0,gp:0,pts_nhl:0,wins:0,shutouts:0,savePct:'0.0',gaa:'0.00'},
+    {id:8476945,name:'Igor Shesterkin',team:'NYR',pos:'G',goals:0,assists:0,gp:0,pts_nhl:0,wins:0,shutouts:0,savePct:'0.0',gaa:'0.00'},
+    {id:8477967,name:'Linus Ullmark',team:'OTT',pos:'G',goals:0,assists:0,gp:0,pts_nhl:0,wins:0,shutouts:0,savePct:'0.0',gaa:'0.00'},
+    {id:8480039,name:'Andrei Vasilevskiy',team:'TBL',pos:'G',goals:0,assists:0,gp:0,pts_nhl:0,wins:0,shutouts:0,savePct:'0.0',gaa:'0.00'},
+    {id:8479406,name:'Jake Oettinger',team:'DAL',pos:'G',goals:0,assists:0,gp:0,pts_nhl:0,wins:0,shutouts:0,savePct:'0.0',gaa:'0.00'},
+    {id:8480315,name:'Juuse Saros',team:'NSH',pos:'G',goals:0,assists:0,gp:0,pts_nhl:0,wins:0,shutouts:0,savePct:'0.0',gaa:'0.00'},
+    {id:8479359,name:'Frederik Andersen',team:'CAR',pos:'G',goals:0,assists:0,gp:0,pts_nhl:0,wins:0,shutouts:0,savePct:'0.0',gaa:'0.00'},
+    {id:8480315,name:'Ilya Sorokin',team:'NYI',pos:'G',goals:0,assists:0,gp:0,pts_nhl:0,wins:0,shutouts:0,savePct:'0.0',gaa:'0.00'},
+    {id:8479425,name:'Thatcher Demko',team:'VAN',pos:'G',goals:0,assists:0,gp:0,pts_nhl:0,wins:0,shutouts:0,savePct:'0.0',gaa:'0.00'},
+    {id:8481533,name:'Adin Hill',team:'VGK',pos:'G',goals:0,assists:0,gp:0,pts_nhl:0,wins:0,shutouts:0,savePct:'0.0',gaa:'0.00'},
+    {id:8479343,name:'Sergei Bobrovsky',team:'FLA',pos:'G',goals:0,assists:0,gp:0,pts_nhl:0,wins:0,shutouts:0,savePct:'0.0',gaa:'0.00'},
+    {id:8480145,name:'Stuart Skinner',team:'EDM',pos:'G',goals:0,assists:0,gp:0,pts_nhl:0,wins:0,shutouts:0,savePct:'0.0',gaa:'0.00'},
+    {id:8479987,name:'Samuel Montembeault',team:'MTL',pos:'G',goals:0,assists:0,gp:0,pts_nhl:0,wins:0,shutouts:0,savePct:'0.0',gaa:'0.00'},
+    {id:8480797,name:'Jeremy Swayman',team:'BOS',pos:'G',goals:0,assists:0,gp:0,pts_nhl:0,wins:0,shutouts:0,savePct:'0.0',gaa:'0.00'},
+    {id:8476412,name:'Marc-Andre Fleury',team:'MIN',pos:'G',goals:0,assists:0,gp:0,pts_nhl:0,wins:0,shutouts:0,savePct:'0.0',gaa:'0.00'},
+    {id:8483515,name:'Mackenzie Blackwood',team:'SJS',pos:'G',goals:0,assists:0,gp:0,pts_nhl:0,wins:0,shutouts:0,savePct:'0.0',gaa:'0.00'},
+    {id:8480420,name:'Karel Vejmelka',team:'UTA',pos:'G',goals:0,assists:0,gp:0,pts_nhl:0,wins:0,shutouts:0,savePct:'0.0',gaa:'0.00'},
+    {id:8480456,name:'Tristan Jarry',team:'PIT',pos:'G',goals:0,assists:0,gp:0,pts_nhl:0,wins:0,shutouts:0,savePct:'0.0',gaa:'0.00'},
+    {id:8479343,name:'Anton Forsberg',team:'OTT',pos:'G',goals:0,assists:0,gp:0,pts_nhl:0,wins:0,shutouts:0,savePct:'0.0',gaa:'0.00'},
+    {id:8483528,name:'Petr Mrazek',team:'CHI',pos:'G',goals:0,assists:0,gp:0,pts_nhl:0,wins:0,shutouts:0,savePct:'0.0',gaa:'0.00'},
+  ];
+}
+</script>
+</body>
+</html>
